@@ -1,4 +1,5 @@
 # zed-github-actions
+
 [![Zed Extension][zed-extension-badge]][zed-extension-url]
 [![License][license-badge]][license-url]
 
@@ -33,21 +34,26 @@ To develop this extension, see the [Developing Extensions](https://zed.dev/docs/
 ## Configuration
 
 ### Filetype settings
-This extension by default does not have any file associations built-in, as Zed doesn't support glob patterns at the extension-level to recognize a language within a specific directory. Instead, you can edit your Zed settings file (`settings.json`) with:
+
+The extension now includes basic file suffix support for `.yml` and `.yaml` files. However, to properly scope the language server to GitHub Actions workflow files specifically (and avoid conflicts with other YAML files), you should configure file type associations in your Zed settings file (`settings.json`):
 
 ```jsonc
 {
-	// ...
-	"file_types": {
-		"GitHub Actions": [
-			".github/workflows/*.yml",
-			".github/workflows/*.yaml"
-		]
-	}
+  // ...
+  "file_types": {
+    "GitHub Actions": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml",
+      "*action.yml",
+      "*action.yaml",
+    ],
+  },
 }
 ```
 
-This extension avoids conflicting with the built-in YAML support for Zed by following how other Zed extensions for specific YAML files resolve this issue, including the [Ansible](https://github.com/kartikvashistha/zed-ansible) extension and [Docker Compose](https://github.com/eth0net/zed-docker-compose) extension.
+**Why this is needed:** Zed's extension system supports `path_suffixes` (simple file extensions) but not glob patterns. Since GitHub Actions workflows are typically in `.github/workflows/` and action files often contain "action" in their name, the `file_types` setting in your Zed config allows glob-based matching for more precise language detection.
+
+This approach avoids conflicting with the built-in YAML support for Zed and follows the pattern used by other Zed extensions for specific YAML files, including the [Ansible](https://github.com/kartikvashistha/zed-ansible) extension and [Docker Compose](https://github.com/eth0net/zed-docker-compose) extension.
 
 ### GitHub Token Configuration
 
@@ -71,14 +77,14 @@ Configure the token directly in your Zed settings (`settings.json`):
 
 ```jsonc
 {
-	// ...
-	"lsp": {
-		"gh-actions-language-server": {
-			"initialization_options": {
-				"sessionToken": "ghp_your_token_here"
-			}
-		}
-	}
+  // ...
+  "lsp": {
+    "gh-actions-language-server": {
+      "initialization_options": {
+        "sessionToken": "ghp_your_token_here",
+      },
+    },
+  },
 }
 ```
 
@@ -94,26 +100,27 @@ The language server works without a token, but some features (like repository-sp
   - Repository permission: `Workflows` (read)
 
 ### LSP Settings
+
 You can configure additional LSP settings in Zed:
 
 ```jsonc
 {
-	// ...
-	"lsp": {
-		"gh-actions-language-server": {
-			"initialization_options": {
-				"sessionToken": "",  // GitHub PAT (or use GITHUB_TOKEN env var)
-				"experimentalFeatures": {
-					// Enable all experimental features
-					"all": false,
-					// Or enable specific features:
-					"missingInputsQuickfix": true,        // Code action to add missing inputs
-					"blockScalarChompingWarning": true    // Warn about implicit chomping
-				},
-				"logLevel": "info"  // Options: "off", "error", "warn", "info", "debug"
-			}
-		}
-	}
+  // ...
+  "lsp": {
+    "gh-actions-language-server": {
+      "initialization_options": {
+        "sessionToken": "", // GitHub PAT (or use GITHUB_TOKEN env var)
+        "experimentalFeatures": {
+          // Enable all experimental features
+          "all": false,
+          // Or enable specific features:
+          "missingInputsQuickfix": true, // Code action to add missing inputs
+          "blockScalarChompingWarning": true, // Warn about implicit chomping
+        },
+        "logLevel": "info", // Options: "off", "error", "warn", "info", "debug"
+      },
+    },
+  },
 }
 ```
 
@@ -178,14 +185,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        if: ${{ github.event_name == 'push' }}  # ✅ Validated expression
-        
+        if: ${{ github.event_name == 'push' }} # ✅ Validated expression
+
       - name: Check branch
-        if: ${{ startsWith(github.ref, 'refs/heads/') }}  # ✅ Function completion
-        
+        if: ${{ startsWith(github.ref, 'refs/heads/') }} # ✅ Function completion
+
       - name: Use secrets
         env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}  # ✅ Context completion
+          TOKEN: ${{ secrets.GITHUB_TOKEN }} # ✅ Context completion
 ```
 
 ## Troubleshooting
@@ -208,20 +215,22 @@ Add to your Zed settings:
 
 ```jsonc
 {
-	"lsp": {
-		"gh-actions-language-server": {
-			"initialization_options": {
-				"logLevel": "debug"
-			}
-		}
-	}
+  "lsp": {
+    "gh-actions-language-server": {
+      "initialization_options": {
+        "logLevel": "debug",
+      },
+    },
+  },
 }
 ```
 
 Then check Zed's LSP logs for detailed information.
 
 ## License
+
 Licensed under Apache License, Version 2.0 ([`LICENSE-APACHE`](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>).
 
 ### Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be licensed as above, without any additional terms or conditions.

@@ -6,6 +6,11 @@ authors = ["Samantha Nguyen <contact@samanthanguyen.me>"]
 description = "GitHub Actions LSP support for Zed with full expression validation and autocompletion."
 repository = "https://github.com/neoncitylights/zed-github-actions"
 
+capabilities = [
+  { kind = "process:exec", command = "git", args = ["**"] },
+  { kind = "process:exec", command = "gh", args = ["**"] }
+]
+
 [grammars.yaml]
 repository = "https://github.com/zed-industries/tree-sitter-yaml"
 commit = "baff0b51c64ef6a1fb1f8390f3ad6015b83ec13a"
