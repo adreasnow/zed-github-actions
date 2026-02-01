@@ -1,9 +1,9 @@
 id = "github-actions"
 name = "GitHub Actions"
-version = "0.0.1"
+version = "0.1.0"
 schema_version = 1
 authors = ["Samantha Nguyen <contact@samanthanguyen.me>"]
-description = "GitHub Actions LSP support for Zed."
+description = "GitHub Actions LSP support for Zed with full expression validation and autocompletion."
 repository = "https://github.com/neoncitylights/zed-github-actions"
 
 [grammars.yaml]

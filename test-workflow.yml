@@ -1,0 +1,108 @@
+# Example workflow file to test expression features
+# This file demonstrates the expression validation and autocompletion capabilities
+
+name: Test GitHub Actions Expression Features
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+
+env:
+  NODE_VERSION: '18'
+  DEPLOY_REGION: 'us-east-1'
+
+jobs:
+  validate-expressions:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Example 1: Context autocompletion - github.*
+      - name: Check event type
+        if: ${{ github.event_name == 'push' }}
+        run: echo "This is a push event"
+
+      # Example 2: Function autocompletion - startsWith()
+      - name: Check branch
+        if: ${{ startsWith(github.ref, 'refs/heads/main') }}
+        run: echo "Running on main branch"
+
+      # Example 3: Multiple contexts - github.* and env.*
+      - name: Setup Node
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Example 4: Function - contains()
+      - name: Check commit message
+        if: ${{ contains(github.event.head_commit.message, '[skip ci]') }}
+        run: echo "Skipping CI"
+
+      # Example 5: Secrets context
+      - name: Use secrets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_KEY: ${{ secrets.API_KEY }}
+        run: echo "Using secrets"
+
+      # Example 6: Logical operators
+      - name: Complex condition
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && !contains(github.event.head_commit.message, 'WIP') }}
+        run: echo "All conditions met"
+
+      # Example 7: toJSON() function
+      - name: Debug context
+        run: echo '${{ toJSON(github) }}'
+
+      # Example 8: format() function
+      - name: Format string
+        run: echo ${{ format('Deploying to {0} in {1}', inputs.environment, env.DEPLOY_REGION) }}
+
+  use-outputs:
+    needs: validate-expressions
+    runs-on: ubuntu-latest
+
+    steps:
+      # Example 9: needs.* context
+      - name: Use job output
+        if: ${{ needs.validate-expressions.result == 'success' }}
+        run: echo "Previous job succeeded"
+
+      # Example 10: runner.* context
+      - name: Show runner info
+        run: |
+          echo "OS: ${{ runner.os }}"
+          echo "Arch: ${{ runner.arch }}"
+          echo "Temp: ${{ runner.temp }}"
+
+  matrix-example:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [16, 18, 20]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # Example 11: matrix.* context
+      - name: Setup with matrix
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Example 12: Multiple matrix values
+      - name: Build for platform
+        run: echo "Building on ${{ matrix.os }} with Node ${{ matrix.node }}"
+
+      # Example 13: Complex matrix expression
+      - name: Platform-specific step
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.node >= 18 }}
+        run: echo "Running Ubuntu-specific step with modern Node"

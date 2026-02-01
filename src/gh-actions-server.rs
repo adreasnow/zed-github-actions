@@ -1,8 +1,8 @@
 use std::collections::HashSet;
+use std::env;
 use zed_extension_api::*;
 
-const PACKAGE_NAME: &str = "gh-actions-language-server";
-const BINARY_NAME: &str = PACKAGE_NAME;
+const PACKAGE_NAME: &str = "@actions/languageserver";
 
 struct GitHubActionsExtension {
 	installed: HashSet<String>,
@@ -10,11 +10,16 @@ struct GitHubActionsExtension {
 
 impl GitHubActionsExtension {
 	fn binary_path() -> String {
+		// Use the official @actions/languageserver binary from node_modules
+		// The package provides its own bin/actions-languageserver wrapper
+		// npm packages are installed in the current working directory (Zed's work dir)
 		std::env::current_dir()
 			.unwrap()
 			.join("node_modules")
-			.join(PACKAGE_NAME)
-			.join(format!("bin/{BINARY_NAME}"))
+			.join("@actions")
+			.join("languageserver")
+			.join("bin")
+			.join("actions-languageserver")
 			.to_string_lossy()
 			.to_string()
 	}
@@ -82,8 +87,17 @@ impl Extension for GitHubActionsExtension {
 		_language_server_id: &LanguageServerId,
 		_worktree: &Worktree,
 	) -> Result<Option<serde_json::Value>> {
+		// Check for GitHub token from environment variables
+		// Priority: GITHUB_TOKEN > GH_TOKEN
+		let session_token = env::var("GITHUB_TOKEN")
+			.or_else(|_| env::var("GH_TOKEN"))
+			.unwrap_or_default();
+
 		Ok(Some(serde_json::json!({
-			"sessionToken": ""
+			"sessionToken": session_token,
+			"experimentalFeatures": {
+				// Users can override this in their Zed settings
+			}
 		})))
 	}
 }
